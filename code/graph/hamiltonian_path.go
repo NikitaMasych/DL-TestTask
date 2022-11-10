@@ -1,58 +1,70 @@
 package graph
 
-import "log"
+import "trains/utils"
 
+/*
 type HamiltonianPath struct {
 	Stations []Station
 }
 
-var rawHamiltonianPaths [][]int
-
-func FindHamiltonianPaths(graph StationsGraph) []HamiltonianPath {
-	findHamiltonianPaths(graph, len(graph.AdjancencyList))
-	return matchRawHamiltonianPaths(graph, rawHamiltonianPaths)
-}
-
-func findHamiltonianPaths(graph StationsGraph, nodesAmount int) {
-	for startNode := 0; startNode != nodesAmount; startNode++ {
-		var path []int
-		path = append(path, startNode)
-		visited := make([]bool, nodesAmount)
-		visited[startNode] = true
-		hamiltonianPaths(graph, startNode, visited, path, nodesAmount)
+func RetrieveBusinessPaths(hamiltonianPaths []HamiltonianPath) [][]string {
+	var businessPaths [][]string
+	for _, hamiltonianPath := range hamiltonianPaths {
+		var businessPath []string
+		for _, station := range hamiltonianPath.Stations {
+			businessPath = append(businessPath, fmt.Sprint(station.NameNumber))
+		}
+		businessPaths = append(businessPaths, businessPath)
 	}
+	return businessPaths
+}
+*/
+
+func (graph *StationsGraph) FindHamiltonianPaths() [][]string {
+	hamiltonianPaths := make([][]string, 0)
+	for node := range graph.AdjancencyList {
+		path := []string{node}
+		visited := make(map[string]bool)
+		visited[node] = true
+		graph.findHamiltonianPaths(node, visited, path, &hamiltonianPaths)
+	}
+	return hamiltonianPaths
 }
 
-func hamiltonianPaths(graph StationsGraph, v int, visited []bool, path []int, n int) {
-	if len(path) == n {
-		rawHamiltonianPaths = append(rawHamiltonianPaths, path)
+func (graph *StationsGraph) findHamiltonianPaths(departure string, visited map[string]bool,
+	path []string, hamiltonianPaths *[][]string) {
+	if len(path) == graph.NodesAmount {
+		if !utils.Contains(*hamiltonianPaths, path) {
+			*hamiltonianPaths = append(*hamiltonianPaths, path)
+		}
 		return
 	}
-	for _, w := range graph.AdjancencyList[v] {
-		if !visited[w.NodeNumber] {
-			visited[w.NodeNumber] = true
-			path = append(path, w.NodeNumber)
-			hamiltonianPaths(graph, v, visited, path, n)
-			visited[w.NodeNumber] = false
+	for _, arrival := range graph.AdjancencyList[departure] {
+		if !visited[arrival] {
+			visited[arrival] = true
+			path = append(path, arrival)
+			graph.findHamiltonianPaths(arrival, visited, path, hamiltonianPaths)
+			visited[arrival] = false
 			path = path[:len(path)-1]
 		}
 	}
 }
 
-func matchRawHamiltonianPaths(graph StationsGraph, rawHamiltonianPaths [][]int) []HamiltonianPath {
+/*
+func (graph *StationsGraph) matchRawHamiltonianPaths(rawHamiltonianPaths [][]int) []HamiltonianPath {
 	var hamiltonianPaths []HamiltonianPath
 	for _, rawHamiltonianPath := range rawHamiltonianPaths {
 		var hamiltonianPath HamiltonianPath
 		for _, nodeNumber := range rawHamiltonianPath {
 			hamiltonianPath.Stations = append(hamiltonianPath.Stations,
-				matchNodeNumberToStation(graph, nodeNumber))
+				graph.matchNodeNumberToStation(nodeNumber))
 		}
 		hamiltonianPaths = append(hamiltonianPaths, hamiltonianPath)
 	}
 	return hamiltonianPaths
 }
 
-func matchNodeNumberToStation(graph StationsGraph, nodeNumber int) Station {
+func (graph *StationsGraph) matchNodeNumberToStation(nodeNumber int) Station {
 	for _, stations := range graph.AdjancencyList {
 		for _, station := range stations {
 			if station.NodeNumber == nodeNumber {
@@ -63,3 +75,4 @@ func matchNodeNumberToStation(graph StationsGraph, nodeNumber int) Station {
 	log.Fatal("Unable to find station with such node number")
 	return Station{}
 }
+*/

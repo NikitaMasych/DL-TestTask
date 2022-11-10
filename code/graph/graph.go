@@ -1,80 +1,72 @@
 package graph
 
 import (
-	"encoding/csv"
-	"io"
-	"log"
-	"os"
-	"strconv"
+	"trains/utils"
 )
 
 type StationsGraph struct {
-	AdjancencyList [][]Station
-}
-
-type Station struct {
-	NodeNumber int
-	NameNumber int
+	AdjancencyList map[string][]string
+	NodesAmount    int
 }
 
 func NewStationsGraph(scheduleFilePath string) *StationsGraph {
 	stations := composeAdjancencyList(scheduleFilePath)
-	return &StationsGraph{stations}
+	nodesAmount := calculateNodesAmount(stations)
+	return &StationsGraph{stations, nodesAmount}
 }
 
-func composeAdjancencyList(scheduleFilePath string) [][]Station {
-	schedule, err := os.Open(scheduleFilePath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer schedule.Close()
-
-	routes := make(map[Station]Station)
-	var stationsNodeNumber []int
-	csvReader := csv.NewReader(schedule)
+func composeAdjancencyList(scheduleFilePath string) map[string][]string {
+	scheduleLines := utils.FetchAllRecords(scheduleFilePath)
 	const (
-		departureIndexInSchedule = 1
-		arrivalIndexInSchedule   = 2
+		departureIndex = 1
+		arrivalIndex   = 2
 	)
-	for {
-		scheduleLine, err := csvReader.Read()
-		if err == io.EOF {
-			break
+	adjancencyList := make(map[string][]string)
+	for _, scheduleLine := range scheduleLines {
+		departureStation := scheduleLine[departureIndex]
+		arrivalStation := scheduleLine[arrivalIndex]
+		if !utils.IsExist(adjancencyList[departureStation], arrivalStation) {
+			adjancencyList[departureStation] = append(adjancencyList[departureStation], arrivalStation)
 		}
-		if err != nil {
-			log.Fatal(err)
-		}
-		departure := fetchDeparture(scheduleLine[departureIndexInSchedule], stationsNodeNumber)
-		arrival := fetchArrival(scheduleLine[arrivalIndexInSchedule], stationsNodeNumber)
-
-		routes[departure] = arrival
 	}
-	return convertToAdjancencyList(routes)
+	return adjancencyList
 }
 
-func fetchDeparture(departureName string, stationsNodeNumber []int) Station {
+func calculateNodesAmount(adjancencyList map[string][]string) int {
+	stations := make(map[string]bool)
+	for departure, arrivals := range adjancencyList {
+		stations[departure] = true
+		for _, arrival := range arrivals {
+			stations[arrival] = true
+		}
+	}
+	return len(stations)
+}
+
+/*
+func composeDeparture(departureName string, stationsNameNumbers *[]int) Station {
 	departureNameNumber, err := strconv.Atoi(departureName)
 	if err != nil {
 		log.Fatal(err)
 	}
-	departudeNodeNumber := indexOf(stationsNodeNumber, departureNameNumber)
+	departudeNodeNumber := indexOf(*stationsNameNumbers, departureNameNumber)
 	if departudeNodeNumber == -1 {
-		stationsNodeNumber = append(stationsNodeNumber, departureNameNumber)
-		departudeNodeNumber = len(stationsNodeNumber) - 1
+		*stationsNameNumbers = append(*stationsNameNumbers, departureNameNumber)
+		departudeNodeNumber = len(*stationsNameNumbers) - 1
 	}
 	departure := Station{departudeNodeNumber, departureNameNumber}
 	return departure
 }
 
-func fetchArrival(arrivalName string, stationsNodeNumber []int) Station {
+func composeArrival(arrivalName string, stationsNameNumbers *[]int) Station {
 	arrivalNameNumber, err := strconv.Atoi(arrivalName)
 	if err != nil {
 		log.Fatal(err)
 	}
-	arrivalNodeNumber := indexOf(stationsNodeNumber, arrivalNameNumber)
+	arrivalNodeNumber := indexOf(*stationsNameNumbers, arrivalNameNumber)
 	if arrivalNodeNumber == -1 {
-		stationsNodeNumber = append(stationsNodeNumber, arrivalNameNumber)
-		arrivalNodeNumber = len(stationsNodeNumber) - 1
+		*stationsNameNumbers = append(*stationsNameNumbers, arrivalNameNumber)
+		arrivalNodeNumber = len(*stationsNameNumbers) - 1
 	}
 	arrival := Station{arrivalNodeNumber, arrivalNameNumber}
 	return arrival
@@ -89,10 +81,11 @@ func indexOf(stations []int, station int) int {
 	return -1
 }
 
-func convertToAdjancencyList(routes map[Station]Station) [][]Station {
+func convertToAdjancencyList(routes map[Station][]Station) [][]Station {
 	adjancencyList := make([][]Station, len(routes))
-	for departure, arrival := range routes {
-		adjancencyList[departure.NodeNumber] = append(adjancencyList[departure.NodeNumber], arrival)
+	for departure, arrivals := range routes {
+		adjancencyList[departure.NodeNumber] = arrivals
 	}
 	return adjancencyList
 }
+*/
