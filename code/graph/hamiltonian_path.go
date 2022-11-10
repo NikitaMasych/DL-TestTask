@@ -2,24 +2,6 @@ package graph
 
 import "trains/utils"
 
-/*
-type HamiltonianPath struct {
-	Stations []Station
-}
-
-func RetrieveBusinessPaths(hamiltonianPaths []HamiltonianPath) [][]string {
-	var businessPaths [][]string
-	for _, hamiltonianPath := range hamiltonianPaths {
-		var businessPath []string
-		for _, station := range hamiltonianPath.Stations {
-			businessPath = append(businessPath, fmt.Sprint(station.NameNumber))
-		}
-		businessPaths = append(businessPaths, businessPath)
-	}
-	return businessPaths
-}
-*/
-
 func (graph *StationsGraph) FindHamiltonianPaths() [][]string {
 	hamiltonianPaths := make([][]string, 0)
 	for node := range graph.AdjancencyList {
@@ -49,30 +31,3 @@ func (graph *StationsGraph) findHamiltonianPaths(departure string, visited map[s
 		}
 	}
 }
-
-/*
-func (graph *StationsGraph) matchRawHamiltonianPaths(rawHamiltonianPaths [][]int) []HamiltonianPath {
-	var hamiltonianPaths []HamiltonianPath
-	for _, rawHamiltonianPath := range rawHamiltonianPaths {
-		var hamiltonianPath HamiltonianPath
-		for _, nodeNumber := range rawHamiltonianPath {
-			hamiltonianPath.Stations = append(hamiltonianPath.Stations,
-				graph.matchNodeNumberToStation(nodeNumber))
-		}
-		hamiltonianPaths = append(hamiltonianPaths, hamiltonianPath)
-	}
-	return hamiltonianPaths
-}
-
-func (graph *StationsGraph) matchNodeNumberToStation(nodeNumber int) Station {
-	for _, stations := range graph.AdjancencyList {
-		for _, station := range stations {
-			if station.NodeNumber == nodeNumber {
-				return station
-			}
-		}
-	}
-	log.Fatal("Unable to find station with such node number")
-	return Station{}
-}
-*/

@@ -34,27 +34,18 @@ func (p *BestRidePlanByPrice) OutputPlan() {
 func FindBestPriceRidePlans(paths [][]string, scheduleFilePath string) BestRidePlanByPrice {
 	scheduleLines := utils.FetchAllRecords(scheduleFilePath)
 	scheduleLines = optimizeScheduleLines(scheduleLines)
-	var (
-		minCost       float64
-		bestRidePlans [][]string
-		bestPath      []string
-	)
-	minCost = -1
-	for _, businessPath := range paths {
-		ridePlans := composeRidePlans(businessPath, scheduleLines)
+	sol := BestRidePlanByPrice{Cost: -1}
+	for _, path := range paths {
+		ridePlans := composeRidePlans(path, scheduleLines)
 		averageRidePlan := retrieveOneRidePlan(ridePlans)
 		currentCost := calculateRidePlanCost(averageRidePlan, scheduleLines)
-		if minCost == -1 {
-			minCost = currentCost
-			bestPath = businessPath
-		}
-		if minCost > currentCost {
-			minCost = currentCost
-			bestRidePlans = ridePlans
-			bestPath = businessPath
+		if sol.Cost == -1 || sol.Cost > currentCost {
+			sol.Cost = currentCost
+			sol.Path = path
+			sol.Rides = ridePlans
 		}
 	}
-	return BestRidePlanByPrice{minCost, bestPath, bestRidePlans}
+	return sol
 }
 
 func composeRidePlans(businessPath []string, scheduleLines [][]string) [][]string {
@@ -86,12 +77,6 @@ func retrieveOneRidePlan(plans [][]string) []string {
 		ridePlan = append(ridePlan, ride[0])
 	}
 	return ridePlan
-}
-
-func outputRecords(records [][]string) {
-	for _, record := range records {
-		fmt.Println(record)
-	}
 }
 
 func calculateRidePlanCost(ridePlan []string, scheduleLines [][]string) float64 {

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"time"
 	"trains/graph"
 	"trains/plans"
 )
@@ -13,10 +15,11 @@ func main() {
 	if len(hamiltonianPaths) == 0 {
 		log.Fatal("Impossible to visit all stations exactly once")
 	}
-	bestRidePlanByPrice := plans.FindBestPriceRidePlans(hamiltonianPaths, scheduleFilePath)
-	bestRidePlanByPrice.OutputPlan()
-	/*
-		bestTimeRidePlan := plans.FindBestTimeRidePlans(businessPaths, scheduleFilePath)
-		fmt.Printf("Best by time ride plan is a sequence of train rides %s", bestTimeRidePlan)
-	*/
+	//bestRidePlanByPrice := plans.FindBestPriceRidePlans(hamiltonianPaths, scheduleFilePath)
+	//bestRidePlanByPrice.OutputPlan()
+	start := time.Now()
+	bestTimeRidePlan := plans.FindBestTimeRidePlans(hamiltonianPaths, scheduleFilePath)
+	took := time.Since(start)
+	fmt.Println("Compulations took", took)
+	bestTimeRidePlan.OutputPlan()
 }
