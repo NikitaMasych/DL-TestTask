@@ -22,19 +22,48 @@ Of all those paths select cheapest, which respectivelly is the answer to the ass
 Here is not possible to use the same approach as in the selection by price, because of the waiting time between rides - it does not allow to divide them separately and just use ride duration as a weight. Hence, the only possible approach is bruteforce-based: compose all possible combinations of the rides and select the best.
 
 # Deployment and testing:
-01. Clone this repository:
+1. Clone this repository:
 ```bash
 git clone https://github.com/NikitaMasych/DL-TestTask
 ``` 
-02. Switch to the repository directory:
+2. Switch to the repository directory:
 ```bash
 cd ./DL-TestTask
 ```
-03. Launch program:
+3. Launch program:
 ```bash
 make run
 ```
-13. In order to launch tests:
+* In order to launch tests:
 ```bash
 make test
+```
+# Project structure:
+
+```
+.
+├── code
+│   ├── cmd
+│   │   └── main.go
+│   ├── go.mod
+│   ├── go.sum
+│   ├── graph
+│   │   ├── graph.go
+│   │   ├── graph_test.go
+│   │   ├── hamiltonian_path.go
+│   │   ├── hamiltonian_test.go
+│   │   └── mocks.go
+│   ├── plans
+│   │   ├── best_price.go
+│   │   ├── best_time.go
+│   │   ├── price_test.go
+│   │   └── time_test.go
+│   └── utils
+│       ├── auxiliary.go
+│       └── repository.go
+├── data
+│   └─── schedule.csv
+├── makefile
+│── Readme.md
+└── specs.md
 ```
