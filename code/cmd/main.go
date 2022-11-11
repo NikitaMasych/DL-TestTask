@@ -1,25 +1,37 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"time"
+	"sync"
 	"trains/graph"
 	"trains/plans"
+	"trains/utils"
 )
 
 func main() {
 	const scheduleFilePath = "./../data/schedule.csv"
-	stationsGraph := graph.NewStationsGraph(scheduleFilePath)
+	records := utils.FetchAllRecords(scheduleFilePath)
+	stationsGraph := graph.NewStationsGraph(records)
 	hamiltonianPaths := stationsGraph.FindHamiltonianPaths()
 	if len(hamiltonianPaths) == 0 {
 		log.Fatal("Impossible to visit all stations exactly once")
 	}
-	//bestRidePlanByPrice := plans.FindBestPriceRidePlans(hamiltonianPaths, scheduleFilePath)
-	//bestRidePlanByPrice.OutputPlan()
-	start := time.Now()
-	bestTimeRidePlan := plans.FindBestTimeRidePlans(hamiltonianPaths, scheduleFilePath)
-	took := time.Since(start)
-	fmt.Println("Compulations took", took)
-	bestTimeRidePlan.OutputPlan()
+	mu := new(sync.Mutex)
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		bestRidePlanByPrice := plans.FindBestPriceRidePlans(hamiltonianPaths, records)
+		mu.Lock()
+		bestRidePlanByPrice.OutputPlan()
+		mu.Unlock()
+	}()
+	go func() {
+		defer wg.Done()
+		bestTimeRidePlan := plans.FindBestTimeRidePlans(hamiltonianPaths, records)
+		mu.Lock()
+		bestTimeRidePlan.OutputPlan()
+		mu.Unlock()
+	}()
+	wg.Wait()
 }

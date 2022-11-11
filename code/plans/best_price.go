@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"sync"
 	"trains/utils"
 )
 
@@ -26,25 +27,35 @@ type BestRidePlanByPrice struct {
 }
 
 func (p *BestRidePlanByPrice) OutputPlan() {
-	fmt.Println("Min cost is:", p.Cost)
-	fmt.Println("Train stations in order:", p.Path)
-	fmt.Println("Ride plan (each enclosed array respresents several options)", p.Rides)
+	fmt.Println("Minimum money cost to visit all stations exactly once is:\n", p.Cost)
+	fmt.Println("Train stations in order:\n", p.Path)
+	fmt.Println("Train numbers ride plan (each enclosed array represents several equal by price variants):\n", p.Rides)
 }
 
-func FindBestPriceRidePlans(paths [][]string, scheduleFilePath string) BestRidePlanByPrice {
-	scheduleLines := utils.FetchAllRecords(scheduleFilePath)
+func FindBestPriceRidePlans(paths [][]string, records [][]string) BestRidePlanByPrice {
+	scheduleLines := make([][]string, len(records))
+	copy(scheduleLines, records)
 	scheduleLines = optimizeScheduleLines(scheduleLines)
 	sol := BestRidePlanByPrice{Cost: -1}
+	var wg sync.WaitGroup
+	mu := new(sync.Mutex)
 	for _, path := range paths {
-		ridePlans := composeRidePlans(path, scheduleLines)
-		averageRidePlan := retrieveOneRidePlan(ridePlans)
-		currentCost := calculateRidePlanCost(averageRidePlan, scheduleLines)
-		if sol.Cost == -1 || sol.Cost > currentCost {
-			sol.Cost = currentCost
-			sol.Path = path
-			sol.Rides = ridePlans
-		}
+		wg.Add(1)
+		go func(path []string) {
+			defer wg.Done()
+			ridePlans := composeRidePlans(path, scheduleLines)
+			averageRidePlan := retrieveOneRidePlan(ridePlans)
+			currentCost := calculateRidePlanCost(averageRidePlan, scheduleLines)
+			mu.Lock()
+			if sol.Cost == -1 || sol.Cost > currentCost {
+				sol.Cost = currentCost
+				sol.Path = path
+				sol.Rides = ridePlans
+			}
+			mu.Unlock()
+		}(path)
 	}
+	wg.Wait()
 	return sol
 }
 

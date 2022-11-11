@@ -9,14 +9,13 @@ type StationsGraph struct {
 	NodesAmount    int
 }
 
-func NewStationsGraph(scheduleFilePath string) *StationsGraph {
-	stations := composeAdjancencyList(scheduleFilePath)
+func NewStationsGraph(scheduleLines [][]string) *StationsGraph {
+	stations := composeAdjancencyList(scheduleLines)
 	nodesAmount := calculateNodesAmount(stations)
 	return &StationsGraph{stations, nodesAmount}
 }
 
-func composeAdjancencyList(scheduleFilePath string) map[string][]string {
-	scheduleLines := utils.FetchAllRecords(scheduleFilePath)
+func composeAdjancencyList(scheduleLines [][]string) map[string][]string {
 	const (
 		departureIndex = 1
 		arrivalIndex   = 2

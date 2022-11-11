@@ -3,6 +3,7 @@ package graph
 import (
 	"os"
 	"testing"
+	"trains/utils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -26,7 +27,22 @@ func TestThatComposeAdjancencyListIsCorrect(t *testing.T) {
 		"1003": {"1002"},
 	}
 
-	actual := composeAdjancencyList(scheduleFilePath)
+	records := utils.FetchAllRecords(scheduleFilePath)
+	actual := composeAdjancencyList(records)
+
+	assert.Equal(t, expected, actual)
+}
+
+func TestThatCalculateNodesAmountIsCorrect(t *testing.T) {
+	adjancencyList := map[string][]string{
+		"1000": {"1001", "1002"},
+		"1001": {"1002", "1003"},
+		"1002": {"1000"},
+		"1003": {"1002"},
+	}
+	expected := 4
+
+	actual := calculateNodesAmount(adjancencyList)
 
 	assert.Equal(t, expected, actual)
 }

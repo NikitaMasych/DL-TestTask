@@ -3,6 +3,7 @@ package graph
 import (
 	"os"
 	"testing"
+	"trains/utils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -20,7 +21,8 @@ func TestThatHamiltonianPathsAreFoundCorrectly(t *testing.T) {
 	}
 	createMockCSV(scheduleFilePath, data)
 	defer os.Remove(scheduleFilePath)
-	graph := NewStationsGraph(scheduleFilePath)
+	records := utils.FetchAllRecords(scheduleFilePath)
+	graph := NewStationsGraph(records)
 	expected := [][]string{
 		{"1000", "1001", "1002", "1003", "1004"},
 		{"1000", "1002", "1001", "1003", "1004"},
