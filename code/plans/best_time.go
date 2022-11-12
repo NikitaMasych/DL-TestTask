@@ -5,6 +5,7 @@ import (
 	"log"
 	"sync"
 	"time"
+	"trains/models"
 )
 
 type BestRidePlanByTime struct {
@@ -23,50 +24,74 @@ func (p *BestRidePlanByTime) OutputPlan() {
 }
 
 const (
-	timeLayout         = "15:04:05"
-	departureTimeIndex = 4
-	arrivalTimeIndex   = 5
+	timeLayout          = "15:04:05"
+	rideIdOffset        = 0
+	departureOffset     = 1
+	arrivalOffset       = 2
+	costOffset          = 3
+	departureTimeOffset = 4
+	arrivalTimeOffset   = 5
 )
 
-func FindBestTimeRidePlans(paths [][]string, records [][]string) BestRidePlanByTime {
-	scheduleLines := make([][]string, len(records))
-	copy(scheduleLines, records)
+func FindBestTimeRidePlans(paths [][]string, scheduleLines [][]string) BestRidePlanByTime {
 	sol := BestRidePlanByTime{Time: time.Duration(-1)}
 	var wg sync.WaitGroup
 	mu := new(sync.Mutex)
 	for _, path := range paths {
 		wg.Add(1)
 		go func(path []string) {
-			rides, duration := findBestTimeRidePlan(path, scheduleLines)
+			duration := findBestTime(path, scheduleLines)
 			mu.Lock()
 			defer mu.Unlock()
 			if sol.Time == -1 || sol.Time > duration {
 				sol.Time = duration
 				sol.Path = path
-				sol.Rides = rides
 			}
 			wg.Done()
 		}(path)
 	}
 	wg.Wait()
+	sol.Rides = composeRidePlan(sol.Path, sol.Time, scheduleLines)
 	return sol
 }
 
-func findBestTimeRidePlan(path []string, scheduleLines [][]string) ([][]string, time.Duration) {
+func findBestTime(path []string, scheduleLines [][]string) time.Duration {
 	ridePlans := findAllRidePlans(path, scheduleLines)
 	ridePlans = unpackRidePlans(ridePlans)
-	ridePlans, duration := selectOnlyBestRidePlans(ridePlans, scheduleLines)
-	return ridePlans, duration
+	duration := findMinimumDuration(ridePlans, scheduleLines)
+	return duration
+}
+
+func composeRidePlan(path []string, duration time.Duration, scheduleLines [][]string) [][]string {
+	ridePlans := findAllRidePlans(path, scheduleLines)
+	ridePlans = unpackRidePlans(ridePlans)
+	ridePlans = filterRidePlans(ridePlans, duration, scheduleLines)
+	return ridePlans
 }
 
 func findAllRidePlans(path []string, scheduleLines [][]string) [][]string {
 	ridePlan := make([][]string, len(path)-1)
 	for i := 0; i < len(path)-1; i++ {
-		observed := route{path[i], path[i+1]}
-		rides := findRidePlans(observed, scheduleLines)
+		route := models.Route{Departure: path[i], Arrival: path[i+1]}
+		rides := findRidePlans(route, scheduleLines)
 		ridePlan[i] = append(ridePlan[i], rides...)
 	}
 	return ridePlan
+}
+
+func findRidePlans(route models.Route, scheduleLines [][]string) []string {
+	var ridePlans []string
+	for _, scheduleLine := range scheduleLines {
+		currentRoute := models.Route{Departure: scheduleLine[departureOffset],
+			Arrival: scheduleLine[arrivalOffset]}
+		if route == currentRoute {
+			ridePlans = append(ridePlans, scheduleLine[rideIdOffset])
+		}
+	}
+	if len(ridePlans) == 0 {
+		log.Print("Unable to find ride for the specified route")
+	}
+	return ridePlans
 }
 
 func unpackRidePlans(ridePlans [][]string) [][]string {
@@ -95,16 +120,16 @@ func unpackRecursively(index int, path []string,
 	}
 }
 
-func selectOnlyBestRidePlans(ridePlans, scheduleLines [][]string) ([][]string, time.Duration) {
-	var bestRidePlans [][]string
-	minTimeDuration := findMinimumDuration(ridePlans, scheduleLines)
+func filterRidePlans(ridePlans [][]string, duration time.Duration,
+	scheduleLines [][]string) [][]string {
+	var filteredRidePlans [][]string
 	for _, ridePlan := range ridePlans {
 		currentTimeDuration := measureDuration(ridePlan, scheduleLines)
-		if minTimeDuration == currentTimeDuration {
-			bestRidePlans = append(bestRidePlans, ridePlan)
+		if duration == currentTimeDuration {
+			filteredRidePlans = append(filteredRidePlans, ridePlan)
 		}
 	}
-	return bestRidePlans, minTimeDuration
+	return filteredRidePlans
 }
 
 func findMinimumDuration(ridePlans, scheduleLines [][]string) time.Duration {
@@ -152,12 +177,12 @@ func gatherTimePeriods(ridePlan []string, scheduleLines [][]string) []time.Time 
 
 func findDepartureAndArrivalTime(ride string, scheduleLines [][]string) []time.Time {
 	for _, scheduleLine := range scheduleLines {
-		if scheduleLine[rideIdIndex] == ride {
-			departureTime, err := time.Parse(timeLayout, scheduleLine[departureTimeIndex])
+		if scheduleLine[rideIdOffset] == ride {
+			departureTime, err := time.Parse(timeLayout, scheduleLine[departureTimeOffset])
 			if err != nil {
 				log.Fatal(err)
 			}
-			arrivalTime, err := time.Parse(timeLayout, scheduleLine[arrivalTimeIndex])
+			arrivalTime, err := time.Parse(timeLayout, scheduleLine[arrivalTimeOffset])
 			if err != nil {
 				log.Fatal(err)
 			}

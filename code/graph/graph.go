@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"trains/models"
 	"trains/utils"
 )
 
@@ -9,23 +10,17 @@ type StationsGraph struct {
 	NodesAmount    int
 }
 
-func NewStationsGraph(scheduleLines [][]string) *StationsGraph {
-	stations := composeAdjancencyList(scheduleLines)
+func NewStationsGraph(routes []models.Route) *StationsGraph {
+	stations := composeAdjancencyList(routes)
 	nodesAmount := calculateNodesAmount(stations)
 	return &StationsGraph{stations, nodesAmount}
 }
 
-func composeAdjancencyList(scheduleLines [][]string) map[string][]string {
-	const (
-		departureIndex = 1
-		arrivalIndex   = 2
-	)
+func composeAdjancencyList(routes []models.Route) map[string][]string {
 	adjancencyList := make(map[string][]string)
-	for _, scheduleLine := range scheduleLines {
-		departureStation := scheduleLine[departureIndex]
-		arrivalStation := scheduleLine[arrivalIndex]
-		if !utils.IsExist(adjancencyList[departureStation], arrivalStation) {
-			adjancencyList[departureStation] = append(adjancencyList[departureStation], arrivalStation)
+	for _, route := range routes {
+		if !utils.Contains(adjancencyList[route.Departure], route.Arrival) {
+			adjancencyList[route.Departure] = append(adjancencyList[route.Departure], route.Arrival)
 		}
 	}
 	return adjancencyList

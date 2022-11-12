@@ -16,7 +16,7 @@ func (graph *StationsGraph) FindHamiltonianPaths() [][]string {
 func (graph *StationsGraph) findHamiltonianPaths(departure string, visited map[string]bool,
 	path []string, hamiltonianPaths *[][]string) {
 	if len(path) == graph.NodesAmount {
-		if !utils.Contains(*hamiltonianPaths, path) {
+		if !utils.ContainsSlice(*hamiltonianPaths, path) {
 			*hamiltonianPaths = append(*hamiltonianPaths, path)
 		}
 		return

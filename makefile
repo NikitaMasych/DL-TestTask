@@ -2,4 +2,5 @@ test:
 	cd ./code && go test ./... -v
 
 run:
-	cd ./code && go run ./cmd
+	docker compose up -d postgres
+	docker compose up --build graphs

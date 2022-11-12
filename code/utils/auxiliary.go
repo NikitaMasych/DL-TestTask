@@ -1,15 +1,24 @@
 package utils
 
-func Contains(list [][]string, element []string) bool {
-	for _, current := range list {
-		if isEqual(current, element) {
+func Contains[T comparable](s []T, e T) bool {
+	for _, v := range s {
+		if v == e {
 			return true
 		}
 	}
 	return false
 }
 
-func isEqual(a, b []string) bool {
+func ContainsSlice[T comparable](s [][]T, e []T) bool {
+	for _, v := range s {
+		if isEqual(v, e) {
+			return true
+		}
+	}
+	return false
+}
+
+func isEqual[T comparable](a, b []T) bool {
 	if len(a) != len(b) {
 		return false
 	}

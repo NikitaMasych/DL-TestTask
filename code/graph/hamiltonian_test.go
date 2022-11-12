@@ -1,28 +1,23 @@
 package graph
 
 import (
-	"os"
 	"testing"
-	"trains/utils"
+	"trains/models"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestThatHamiltonianPathsAreFoundCorrectly(t *testing.T) {
-	scheduleFilePath := "schedule.csv"
-	data := [][]string{
-		{"0", "1000", "1001", "938.2", "00:00:00", "00:00:00"},
-		{"1", "1000", "1002", "938.2", "00:00:00", "00:00:00"},
-		{"2", "1001", "1002", "938.2", "00:00:00", "00:00:00"},
-		{"3", "1002", "1001", "938.2", "00:00:00", "00:00:00"},
-		{"4", "1001", "1003", "938.2", "00:00:00", "00:00:00"},
-		{"5", "1002", "1003", "938.2", "00:00:00", "00:00:00"},
-		{"6", "1003", "1004", "938.2", "00:00:00", "00:00:00"},
+	routes := []models.Route{
+		{Departure: "1000", Arrival: "1001"},
+		{Departure: "1000", Arrival: "1002"},
+		{Departure: "1001", Arrival: "1002"},
+		{Departure: "1002", Arrival: "1001"},
+		{Departure: "1001", Arrival: "1003"},
+		{Departure: "1002", Arrival: "1003"},
+		{Departure: "1003", Arrival: "1004"},
 	}
-	createMockCSV(scheduleFilePath, data)
-	defer os.Remove(scheduleFilePath)
-	records := utils.FetchAllRecords(scheduleFilePath)
-	graph := NewStationsGraph(records)
+	graph := NewStationsGraph(routes)
 	expected := [][]string{
 		{"1000", "1001", "1002", "1003", "1004"},
 		{"1000", "1002", "1001", "1003", "1004"},

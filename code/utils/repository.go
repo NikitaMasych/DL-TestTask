@@ -21,24 +21,3 @@ func FetchAllRecords(scheduleFilePath string) [][]string {
 	}
 	return scheduleLines
 }
-
-func IsExist(records []string, record string) bool {
-	for _, current := range records {
-		if current == record {
-			return true
-		}
-	}
-	return false
-}
-
-func DeleteRecord(records [][]string, index int) [][]string {
-	if index >= len(records) {
-		log.Fatal("Index out of range")
-		return records
-	}
-	if index+1 == len(records) {
-		return records[:index]
-	}
-
-	return append(records[:index], records[index+1:]...)
-}
